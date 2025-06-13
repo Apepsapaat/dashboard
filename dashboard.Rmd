@@ -4,7 +4,6 @@ output:
   flexdashboard::flex_dashboard:
     vertical_layout: scroll
 ---
-library(rmarkdown)
 
     
 ### Retur from store vs retur closed
