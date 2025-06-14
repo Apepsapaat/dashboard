@@ -3,21 +3,38 @@ title: "DASHBOARD RETUR SPM DCB"
 output: 
   flexdashboard::flex_dashboard:
     vertical_layout: scroll
+    
+
 ---
-
     
-### Retur from store vs retur closed
+### Retur from store vs Retur closed
+    
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(readxl)
+library(dplyr)
 
-```{r}
+### Retur from store vs Retur closed
+# Baca file
+df <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "ALL RCV")
+
+
+# Konversi tanggal dan agregasi data
+df <- df %>%
+  mutate(`Receipt date` = as.Date(`Receipt date`)) %>%
+  group_by(`Receipt date`) %>%
+  summarise(Total = sum(`Total qty`, na.rm = TRUE)) %>%
+  rename(Tanggal = `Receipt date`)
+```
+
+```{r} 
+# Grafik garis ditampilkan di sini
+ggplot(df, aes(x = Tanggal, y = Total)) +
+  geom_line(color = "steelblue", size = 1.2) +
+  geom_point(color = "darkblue") +
+  labs(title = "Total Retur per Hari", x = "Tanggal", y = "Total Retur") +
+  theme_minimal()
 ```
     
-### Retur closed vs pick retur
-
-```{r}
-```
-
-### Pick retur vs Take retur
-
-```{r}
-```
-
+```{r} 
