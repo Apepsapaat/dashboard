@@ -13,24 +13,27 @@ library(ggplot2)
 library(readxl)
 library(dplyr)
 library(plotly)
+library(lubridate)
 
 # Load dan siapkan data
-df <- read_excel("G:/My Drive/REPORT/RETUR IN.xlsx", sheet = "ALL RCV")
+df <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "ALL RCV")
+
 
 df <- df %>%
-  mutate(`Receipt date` = as.Date(`Receipt date`)) %>%
-  group_by(`Receipt date`) %>%
-  summarise(Total = sum(`Total qty`, na.rm = TRUE)) %>%
-  rename(Tanggal = `Receipt date`)
+  mutate(`Receipt date` = as.Date(`Receipt date`),
+         Week = floor_date(`Receipt date`, unit = "week", week_start = 1)) %>%
+  group_by(Week, `Status`) %>%
+  summarise(Total = n(), .groups = "drop") %>%
+  rename(Tanggal = Week)
 
 # Grafik tampil di sini
 
 ```{r}
 ggplotly(
-  ggplot(df, aes(x = Tanggal, y = Total)) +
-    geom_line(color = "steelblue", size = 1.2) +
-    geom_point(color = "darkblue") +
-    labs(title = "Total Retur per Hari", x = "Tanggal", y = "Total Retur") +
+  ggplot(df, aes(x = Tanggal, y = Total, fill = `Status`)) +
+    geom_col(position = "stack") +
+    labs(title = "Total Retur per Minggu Berdasarkan Status",
+         x = "Minggu", y = "Total Retur", fill = "Status") +
+    scale_fill_manual(values = c("Closed" = "steelblue", "Open" = "tomato")) +
     theme_minimal()
 )
-
