@@ -1,11 +1,13 @@
 ---
-title: "Dashboard Retur per Hari"
+title: "DASHBOARD RETUR SPM DCB"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: rows
-    vertical_layout: fill
-    theme: cosmo
+    vertical_layout: scroll
 ---
+
+
+
+
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
@@ -14,26 +16,55 @@ library(readxl)
 library(dplyr)
 library(plotly)
 library(lubridate)
-
-# Load dan siapkan data
-df <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "ALL RCV")
-
-
-df <- df %>%
-  mutate(`Receipt date` = as.Date(`Receipt date`),
-         Week = floor_date(`Receipt date`, unit = "week", week_start = 1)) %>%
-  group_by(Week, `Status`) %>%
-  summarise(Total = n(), .groups = "drop") %>%
-  rename(Tanggal = Week)
-
-# Grafik tampil di sini
+library(tidyr)
+library(DT)
+```
 
 ```{r}
-ggplotly(
-  ggplot(df, aes(x = Tanggal, y = Total, fill = `Status`)) +
-    geom_col(position = "stack") +
-    labs(title = "Total Retur per Minggu Berdasarkan Status",
-         x = "Minggu", y = "Total Retur", fill = "Status") +
-    scale_fill_manual(values = c("Closed" = "steelblue", "Open" = "tomato")) +
-    theme_minimal()
-)
+df_in <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "ALL RCV") %>%
+  mutate(ReceiptDate = as.Date(`Receipt date`),
+         Week = floor_date(ReceiptDate, unit = "week", week_start = 1)) %>%
+  group_by(Week) %>%
+  summarise(ReturMasuk = n(), .groups = "drop")
+
+df_closed <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "RCV CLOSED") %>%
+  mutate(CloseDate = as.Date(`Close date`),
+         Week = floor_date(CloseDate, unit = "week", week_start = 1)) %>%
+  group_by(Week) %>%
+  summarise(ReturClosed = n(), .groups = "drop")
+
+df_compare <- full_join(df_in, df_closed, by = "Week") %>%
+  replace_na(list(ReturMasuk = 0, ReturClosed = 0))
+```
+
+# Retur from store vs Retur closed
+
+```{r}
+p <- ggplot(df_compare, aes(x = Week)) +
+  # batang untuk ReturMasuk
+  geom_col(aes(y = ReturMasuk), fill = "steelblue", width = 6) +
+  # garis + titik untuk ReturClosed
+  geom_line(aes(y = ReturClosed), color = "tomato", size = 1) +
+  geom_point(aes(y = ReturClosed), color = "tomato", size = 2) +
+  # label dan tema
+  labs(title = " ",
+       x = "Week", y = "Jumlah Retur") +
+  theme_minimal()
+
+# 3. Interaktif dengan plotly
+ggplotly(p)
+
+```
+
+# SOLUSI GHS
+```{r}
+GHS <- read_excel("D:/dashboard/GHS.xlsx")
+```
+
+```{r}
+datatable(GHS,
+          caption = "Solusi GHS",
+          rownames = TRUE,
+          filter = "top",
+          options = list(pagelength=100))
+```
