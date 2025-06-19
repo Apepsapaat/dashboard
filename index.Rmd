@@ -18,6 +18,7 @@ library(plotly)
 library(lubridate)
 library(tidyr)
 library(DT)
+library(scales)
 ```
 
 ```{r}
@@ -35,24 +36,47 @@ df_closed <- read_excel("D:/dashboard/RETUR IN.xlsx", sheet = "RCV CLOSED") %>%
 
 df_compare <- full_join(df_in, df_closed, by = "Week") %>%
   replace_na(list(ReturMasuk = 0, ReturClosed = 0))
+
+df_long <- df_compare %>%
+  pivot_longer(cols = c(ReturMasuk, ReturClosed), names_to = "Tipe", values_to = "Jumlah")
+
+
 ```
 
-# Retur from store vs Retur closed
+# RETUR FROM STORE VS RETUR CLOSED
 
 ```{r}
-p <- ggplot(df_compare, aes(x = Week)) +
-  # batang untuk ReturMasuk
-  geom_col(aes(y = ReturMasuk), fill = "steelblue", width = 6) +
-  # garis + titik untuk ReturClosed
-  geom_line(aes(y = ReturClosed), color = "tomato", size = 1) +
-  geom_point(aes(y = ReturClosed), color = "tomato", size = 2) +
-  # label dan tema
-  labs(title = " ",
-       x = "Week", y = "Jumlah Retur") +
+p <- ggplot(df_long, aes(x = Week, y = Jumlah, color = Tipe, fill = Tipe)) +
+  geom_col(data = subset(df_long, Tipe == "ReturMasuk"), width = 6, alpha = 0.6) +
+  geom_line(data = subset(df_long, Tipe == "ReturClosed"), size = 1) +
+  geom_point(data = subset(df_long, Tipe == "ReturClosed"), size = 2) +
+  scale_color_manual(values = c("ReturMasuk" = "steelblue", "ReturClosed" = "tomato"),
+                     labels = c("ReturMasuk" = "Retur Masuk", "ReturClosed" = "Retur Closed")) +
+  scale_fill_manual(values = c("ReturMasuk" = "steelblue", "ReturClosed" = "tomato"),
+                    labels = c("ReturMasuk" = "Retur Masuk", "ReturClosed" = "Retur Closed")) +
+  labs(title = "",
+       x = "Minggu",
+       y = "Jumlah Retur",
+       color = "",
+       fill = "") +
   theme_minimal()
-
 # 3. Interaktif dengan plotly
 ggplotly(p)
+
+
+
+```
+
+# RETUR CLOSED VS PICK RETUR
+```{r}
+
+```
+
+
+
+# PICK RETUR VS TAKE RETUR BY SPPLIER
+```{r}
+
 
 ```
 
